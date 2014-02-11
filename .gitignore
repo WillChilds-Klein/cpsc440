@@ -1,5 +1,6 @@
 # Initially, exclude files
 *
 
-# Re-include all files with appendage
+# Re-include all files with appendage and Makefile
 !*.*
+!Makefile
