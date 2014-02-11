@@ -1,0 +1,5 @@
+# Initially, exclude files
+*
+
+# Re-include all files with appendage
+!*.*
