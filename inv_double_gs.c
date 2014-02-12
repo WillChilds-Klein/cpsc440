@@ -11,7 +11,7 @@ void vectorSubtract(int n, double* u, double* v, double* w); 	// u - v = w
 void vectorAdd(int n, double* u, double* v, double* w); 		// u + v = w
 void vectorScale(int n, double* u, double c, double* w);		// cu = w
 void dotProduct(int n, double* u, double* v, double* w);		// u * v = w
-void vectorComp(int n, double* u, double* v, double* w);		// comp(u,v) = w
+void vectorProject(int n, double* u, double* v, double* w);		// comp(u,v) = w
 void vectorNormalize(int n, double* u, double* w);				// ||u|| = w
 void vectorMagnitude(int n, double* u, double* w);				// |u| = w
 
@@ -32,6 +32,7 @@ void flatPrint(int n, double* u);
 void inv_double_gs(double* a, int n, double* u, double* b){
 	double A[n][n], U[n][n], G[n][n], 
 		aVecs[n][n], uVecs[n][n], gVecs[n][n], wVecs[n][n];
+	double temp[n];
 	int i, j;
 
 	matrixExpand(n, a, A);
@@ -41,16 +42,23 @@ void inv_double_gs(double* a, int n, double* u, double* b){
 	matrixTranspose(n, A, aVecs);
 
 	for(i = 0; i < n; i++){
-		vectorNormalize(n, aVecs[i], aVecs[i]);
 		for(j = i+1; j < n; j++){
-			vectorSubtract(n, aVecs[j], aVecs[i], aVecs[j]);
-		}
-	}
+			// store component to take off in temp
+			vectorProject(n, aVecs[i], aVecs[j], temp);
 
+			// subtract off appropriate component
+			vectorSubtract(n, aVecs[j], temp, aVecs[j]);
+		}
+		vectorNormalize(n, aVecs[i], uVecs[i]);
+	}
 
 	// re-transp to get correct A and U
 	matrixTranspose(n, aVecs, A);
 	matrixTranspose(n, uVecs, U);
+
+	matrixPrint(n, A);
+	printf("\n");
+	matrixPrint(n, U);
 }
 
 void vectorSubtract(int n, double* u, double* v, double* w){
@@ -97,12 +105,13 @@ void dotProduct(int n, double* u, double* v, double* w){
 	return;
 }
 
-void vectorComp(int n, double* u, double* v, double* w){
-	double product[1];
+void vectorProject(int n, double* u, double* v, double* w){
+	double product[1], magnitude[1], c;
 
 	dotProduct(n, u, v, product);
-
-	vectorScale(n, u, *product, w);
+	vectorMagnitude(n, u, magnitude);
+	c = *product / pow(*magnitude, 2);
+	vectorScale(n, u, c, w);
 
 	return;
 }
@@ -111,9 +120,7 @@ void vectorNormalize(int n, double* u, double* w){
 	int i;
 	double magnitude[1];
 
-	// potential segfault. might have to initialize.
 	vectorMagnitude(n, u, magnitude);
-	printf("mag: %f\n", *magnitude);
 
 	for(i = 0; i < n; i++){
 		w[i] = u[i] / (*magnitude);
@@ -230,8 +237,9 @@ void flatPrint(int n, double* u){
 }
 
 int main(){
-	int i, j, sum = 0, n = 3;
-	double a[3][3], u[n][n], b[3][3], x[n], y[1];
+	int i, j, sum = 1, n = 3;
+	double a[n][n], u[n][n], b[n][n], x[n], y[1], 
+		flatA[n*n], flatU[n*n], flatB[n*n];
 
 	for(i = 0; i < n; i++){
 		for (j = 0; j < n; j++){
@@ -240,7 +248,7 @@ int main(){
 	}
 
 	// Test subroutines.
-
+	/** /
 	printf("u:\n");
 	vectorPrint(n, a[1]);	
 	printf("v:\n");
@@ -280,7 +288,7 @@ int main(){
 	printf("v:\n");
 	vectorPrint(n, a[0]);
 	printf("comp(u,v:)\n");
-	vectorComp(n, a[1], a[0], x);
+	vectorProject(n, a[1], a[0], x);
 	vectorPrint(n, x);
 	printf("\n\n");
 
@@ -311,5 +319,9 @@ int main(){
 	matrixMultiply(n, a, a, b);
 	matrixPrint(n, b);
 	printf("\n\n");
+	/**/
+
+	matrixFlatten(n, a, flatA);
+	inv_double_gs(flatA, n, flatU, flatB);
 
 }
