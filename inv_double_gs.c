@@ -29,93 +29,28 @@ void matrixPrint(int n, double u[][n]);
 void flatPrint(int n, double* u);
 
 
-int main(){
-	int i, j, sum = 0, n = 3;
-	double a[3][3], u[n][n], b[3][3], x[n], y[1];
+void inv_double_gs(double* a, int n, double* u, double* b){
+	double A[n][n], U[n][n], G[n][n], 
+		aVecs[n][n], uVecs[n][n], gVecs[n][n], wVecs[n][n];
+	int i, j;
+
+	matrixExpand(n, a, A);
+
+	// aVecs = aT b/c we want to work with the column vectors. 
+	// re-transp both this and uVecs post-GS to get correct matrices.
+	matrixTranspose(n, A, aVecs);
 
 	for(i = 0; i < n; i++){
-		for (j = 0; j < n; j++){
-			a[i][j] = sum++;
+		vectorNormalize(n, aVecs[i], aVecs[i]);
+		for(j = i+1; j < n; j++){
+			vectorSubtract(n, aVecs[j], aVecs[i], aVecs[j]);
 		}
 	}
 
-	// Test subroutines.
 
-	printf("u:\n");
-	vectorPrint(n, a[1]);	
-	printf("v:\n");
-	vectorPrint(n, a[0]);
-	printf("u - v:\n");
-	vectorSubtract(n, a[1], a[0], x);
-	vectorPrint(n, x);
-	printf("\n\n");
-
-	printf("u:\n");
-	vectorPrint(n, a[1]);	
-	printf("v:\n");
-	vectorPrint(n, a[2]);
-	printf("u + v:\n");
-	vectorAdd(n, a[1], a[2], x);
-	vectorPrint(n, x);
-	printf("\n\n");
-
-	printf("u:\n");
-	vectorPrint(n, a[1]);
-	printf("9u:\n");
-	vectorScale(n, a[1], 9, x);
-	vectorPrint(n, x);
-	printf("\n\n");
-
-	printf("u:\n");
-	vectorPrint(n, a[1]);	
-	printf("v:\n");
-	vectorPrint(n, a[0]);
-	printf("u * v:\n");
-	dotProduct(n, a[1], a[0], y);
-	printf("%f\n", *y);
-	printf("\n\n");
-
-	printf("u:\n");
-	vectorPrint(n, a[1]);	
-	printf("v:\n");
-	vectorPrint(n, a[0]);
-	printf("comp(u,v:)\n");
-	vectorComp(n, a[1], a[0], x);
-	vectorPrint(n, x);
-	printf("\n\n");
-
-	printf("u:\n");
-	vectorPrint(n, a[1]);
-	printf("||u||:\n");
-	vectorNormalize(n, a[1], x);
-	vectorPrint(n, x);
-	printf("\n\n");
-
-	printf("u:\n");
-	vectorPrint(n, a[1]);
-	printf("|u|:\n");
-	vectorMagnitude(n, a[1], y);
-	printf("%f\n", *y);
-	printf("\n\n");
-
-	printf("a:\n");
-	matrixPrint(n, a);
-	printf("aT:\n");
-	matrixTranspose(n, a, b);
-	matrixPrint(n, b);
-	printf("\n\n");
-
-	printf("a:\n");
-	matrixPrint(n, a);
-	printf("a^2:\n");
-	matrixMultiply(n, a, a, b);
-	matrixPrint(n, b);
-	printf("\n\n");
-
-}
-
-void inv_double_gs(double* a, int n, double* u, double* b){
-
+	// re-transp to get correct A and U
+	matrixTranspose(n, aVecs, A);
+	matrixTranspose(n, uVecs, U);
 }
 
 void vectorSubtract(int n, double* u, double* v, double* w){
@@ -292,4 +227,89 @@ void flatPrint(int n, double* u){
 	printf("\n");
 
 	return;
+}
+
+int main(){
+	int i, j, sum = 0, n = 3;
+	double a[3][3], u[n][n], b[3][3], x[n], y[1];
+
+	for(i = 0; i < n; i++){
+		for (j = 0; j < n; j++){
+			a[i][j] = sum++;
+		}
+	}
+
+	// Test subroutines.
+
+	printf("u:\n");
+	vectorPrint(n, a[1]);	
+	printf("v:\n");
+	vectorPrint(n, a[0]);
+	printf("u - v:\n");
+	vectorSubtract(n, a[1], a[0], x);
+	vectorPrint(n, x);
+	printf("\n\n");
+
+	printf("u:\n");
+	vectorPrint(n, a[1]);	
+	printf("v:\n");
+	vectorPrint(n, a[2]);
+	printf("u + v:\n");
+	vectorAdd(n, a[1], a[2], x);
+	vectorPrint(n, x);
+	printf("\n\n");
+
+	printf("u:\n");
+	vectorPrint(n, a[1]);
+	printf("9u:\n");
+	vectorScale(n, a[1], 9, x);
+	vectorPrint(n, x);
+	printf("\n\n");
+
+	printf("u:\n");
+	vectorPrint(n, a[1]);	
+	printf("v:\n");
+	vectorPrint(n, a[0]);
+	printf("u * v:\n");
+	dotProduct(n, a[1], a[0], y);
+	printf("%f\n", *y);
+	printf("\n\n");
+
+	printf("u:\n");
+	vectorPrint(n, a[1]);	
+	printf("v:\n");
+	vectorPrint(n, a[0]);
+	printf("comp(u,v:)\n");
+	vectorComp(n, a[1], a[0], x);
+	vectorPrint(n, x);
+	printf("\n\n");
+
+	printf("u:\n");
+	vectorPrint(n, a[1]);
+	printf("||u||:\n");
+	vectorNormalize(n, a[1], x);
+	vectorPrint(n, x);
+	printf("\n\n");
+
+	printf("u:\n");
+	vectorPrint(n, a[1]);
+	printf("|u|:\n");
+	vectorMagnitude(n, a[1], y);
+	printf("%f\n", *y);
+	printf("\n\n");
+
+	printf("a:\n");
+	matrixPrint(n, a);
+	printf("aT:\n");
+	matrixTranspose(n, a, b);
+	matrixPrint(n, b);
+	printf("\n\n");
+
+	printf("a:\n");
+	matrixPrint(n, a);
+	printf("a^2:\n");
+	matrixMultiply(n, a, a, b);
+	matrixPrint(n, b);
+	printf("\n\n");
+
 }
