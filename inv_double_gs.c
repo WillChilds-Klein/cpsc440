@@ -278,6 +278,7 @@ void flatPrint(int n, double* u){
 	return;
 }
 
+/** /
 int main(){
 	int i, j, n = 3;
 	double a[n][n], u[n][n], b[n][n], x[n], y[1], 
@@ -291,7 +292,6 @@ int main(){
 	}
 
 	// Test subroutines.
-	/** /
 	printf("u:\n");
 	vectorPrint(n, a[1]);	
 	printf("v:\n");
@@ -362,7 +362,6 @@ int main(){
 	matrixMultiply(n, a, a, b);
 	matrixPrint(n, b);
 	printf("\n\n");
-	/**/
 
 	matrixFlatten(n, a, flatA);
 	inv_double_gs(flatA, n, flatU, flatB);
@@ -375,3 +374,4 @@ int main(){
 	printf("finished B:\n");
 	matrixPrint(n, b);
 }
+/**/
