@@ -28,9 +28,6 @@ void vectorPrint(int n, double* u);
 void matrixPrint(int n, double u[][n]);
 void flatPrint(int n, double* u);
 
-// delete later
-#define BIGN (3)
-
 
 void inv_double_gs(double* a, int n, double* u, double* b){
 	double A[n][n], U[n][n], G[n][n], B[n][n], Ut[n][n], AB[n][n],
@@ -89,7 +86,7 @@ void inv_double_gs(double* a, int n, double* u, double* b){
 	// Now, find the inverse
 	matrixMultiply(n, G, Ut, B);
 
-	/**/
+	/** /
 	// print the results.
 	printf("U:\n");
 	matrixPrint(n, U);
