@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 
 void inv_double_gs(double* a, int n, double* u, double* b);
@@ -27,27 +28,27 @@ void vectorPrint(int n, double* u);
 void matrixPrint(int n, double u[][n]);
 void flatPrint(int n, double* u);
 
+// delete later
+#define BIGN (3)
+
 
 void inv_double_gs(double* a, int n, double* u, double* b){
-	double A[n][n], U[n][n], G[n][n], B[n][n], Ut[n][n], proj[n], gproj[n],
-		aVecs[n][n], uVecs[n][n], gVecs[n][n], wVecs[n][n];
+	double A[n][n], U[n][n], G[n][n], B[n][n], Ut[n][n], AB[n][n],
+		proj[n], gproj[n], aVecs[n][n], uVecs[n][n], gVecs[n][n], wVecs[n][n],
+		flatU[n*n], flatB[n*n];
 	int i, j;
 
 	matrixExpand(n, a, A);
 
-	// init G to Identity
 	for(i = 0; i < n; i++){
 		for(j = 0; j < n; j++){
+			// init G to Identity
 			if(i == j)
 				G[i][j] = 1.0;
 			else
 				G[i][j] = 0.0;
-		}
-	}
 
-	// init U to A
-	for(i = 0; i < n; i++){
-		for(j = 0; j < n; j++){
+			// init U to A
 			U[i][j] = A[i][j];
 		}
 	}
@@ -58,44 +59,29 @@ void inv_double_gs(double* a, int n, double* u, double* b){
 	matrixTranspose(n, U, uVecs);
 	matrixTranspose(n, G, gVecs);
 
+	// Graham-Schmidt logic
 	for(i = 0; i < n; i++){
-		// single GS
-		for(j = i+1; j < n; j++){
+		for(j = 0; j < i; j++){
 			// store component to take off in temp
-			vectorProject(n, aVecs[j], uVecs[i], uVecs[i], proj);
-			vectorProject(n, aVecs[j], uVecs[i], gVecs[i], gproj);
+			vectorProject(n, aVecs[i], uVecs[j], gVecs[j], gproj);
+			vectorProject(n, aVecs[i], uVecs[j], uVecs[j], proj);
 
 			// subtract off appropriate component
-			vectorSubtract(n, uVecs[j], proj, uVecs[j]);
-			vectorSubtract(n, gVecs[j], gproj, gVecs[j]);
+			vectorSubtract(n, gVecs[i], gproj, gVecs[i]);
+			vectorSubtract(n, uVecs[i], proj, uVecs[i]);
 		}
+	}
+
+	// normalize everything.
+	for(i = 0; i < n; i++){
 		vectorNormalize(n, gVecs[i], uVecs[i], gVecs[i]);
 		vectorNormalize(n, uVecs[i], uVecs[i], uVecs[i]);
 	}
-
-	// for(i = n-1; i >= 0; i--){
-	// 	// double GS
-	// 	for(j = i-1; j >= 0; j--){
-	// 		// store component to take off in temp
-	// 		vectorProject(n, uVecs[i], uVecs[j], proj);
-
-	// 		// subtract off appropriate component
-	// 		vectorSubtract(n, uVecs[j], proj, uVecs[j]);
-	// 	}
-	// 	vectorNormalize(n, aVecs[i], aVecs[i] uVecs[i]);
-	// }
 
 	// re-transp to get correct A, G, and U.
 	matrixTranspose(n, aVecs, A);
 	matrixTranspose(n, uVecs, U);
 	matrixTranspose(n, gVecs, G);
-
-	printf("A:\n");
-	matrixPrint(n, A);
-	printf("U:\n");
-	matrixPrint(n, U);
-	printf("G:\n");
-	matrixPrint(n, G);
 
 	// we need U's transpose
 	matrixTranspose(n, U, Ut);
@@ -103,16 +89,28 @@ void inv_double_gs(double* a, int n, double* u, double* b){
 	// Now, find the inverse
 	matrixMultiply(n, G, Ut, B);
 
+	/**/
+	// print the results.
+	printf("U:\n");
+	matrixPrint(n, U);
+	printf("G:\n");
+	matrixPrint(n, G);
 	printf("A:\n");
 	matrixPrint(n, A);
 	printf("B:\n");
 	matrixPrint(n, B);
-
-	// check that AB is Identity.
-	matrixMultiply(n, A, B, G);
+	matrixMultiply(n, A, B, AB);
 	printf("AB: (should be Identity)\n");
-	matrixPrint(n, G);
+	matrixPrint(n, AB);
+	/**/
 
+	// flatten U and B
+	matrixFlatten(n, U, flatU);
+	matrixFlatten(n, B, flatB);
+
+	// copy over to return pointers
+	memcpy(u, flatU, n*n*sizeof(double));
+	memcpy(b, flatB, n*n*sizeof(double));
 }
 
 void vectorSubtract(int n, double* u, double* v, double* w){
@@ -139,7 +137,7 @@ void dotProduct(int n, double* u, double* v, double* w){
 	int i;
 	double product;
 
-	product = 0;
+	product = 0.0;
 
 	for(i = 0; i < n; i++){
 		product += u[i] * v[i];
@@ -150,11 +148,11 @@ void dotProduct(int n, double* u, double* v, double* w){
 }
 
 void vectorProject(int n, double* u, double* v, double* x, double* w){
-	double product[1], magnitude[1], c;
+	double product[1], magnitude[1], c = 0.0;
 
 	dotProduct(n, u, v, product);
 	vectorMagnitude(n, v, magnitude);
-	c = *product / pow(*magnitude, 2);
+	c = (*product) / pow(*magnitude, 2.0);
 	vectorScale(n, x, c, w);
 
 	return;
@@ -167,7 +165,7 @@ void vectorNormalize(int n, double* u, double* v, double* w){
 	vectorMagnitude(n, v, magnitude);
 
 	for(i = 0; i < n; i++){
-		w[i] = u[i] / (*magnitude);
+		w[i] = u[i] / *magnitude;
 	}
 
 	return;
@@ -178,7 +176,7 @@ void vectorMagnitude(int n, double* u, double* w){
 
 	double sum = 0;
 	for(i = 0; i < n; i++){
-		sum += pow(u[i], 2);
+		sum += u[i] * u[i];
 	}
 
 	*w = sqrt(sum);
@@ -203,7 +201,7 @@ void matrixMultiply(int n, double u[][n], double v[][n], double w[][n]){
 
 	for(i = 0; i < n; i++){
 		for(j = 0; j < n; j++){
-			vectorSum = 0;
+			vectorSum = 0.0;
 			for(k = 0; k < n; k++){
 				vectorSum += u[i][k] * v[k][j];
 			}
@@ -281,10 +279,11 @@ void flatPrint(int n, double* u){
 }
 
 int main(){
-	int i, j, sum = 1, n = 2;
+	int i, j, n = 3;
 	double a[n][n], u[n][n], b[n][n], x[n], y[1], 
-		flatA[n*n], flatU[n*n], flatB[n*n];
+		flatA[n*n], flatU[n*n], flatB[n*n], sum = 1.0;
 
+	// init a
 	for(i = 0; i < n; i++){
 		for (j = 0; j < n; j++){
 			a[i][j] = sum++;
@@ -368,4 +367,11 @@ int main(){
 	matrixFlatten(n, a, flatA);
 	inv_double_gs(flatA, n, flatU, flatB);
 
+	// check results
+	matrixExpand(n, flatU, u);
+	matrixExpand(n, flatB, b);
+	printf("finished U:\n");
+	matrixPrint(n, u);
+	printf("finished B:\n");
+	matrixPrint(n, b);
 }
