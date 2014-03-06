@@ -1,7 +1,7 @@
 CFLAGS = -g3 -std=c99 
 CC = gcc
 
-all: inv_double_gs
+all: upperhes
 
-inv_double_gs: inv_double_gs.o
-		${CC} ${CFLAGS} inv_double_gs.c -o inv_double_gs -lm
+upperhes: upperhes.o
+		${CC} ${CFLAGS} upperhes.c -o upperhes -lm
