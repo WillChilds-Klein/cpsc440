@@ -3,9 +3,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
+#define EPS (.0000001)
 
 void upperhes(int n, double *a, double *u, double *b);
+void kill_ze_offenders(int n, double b[][n], int i, int j, double phi);
+void upperhes_slow(int n, double *aFlat, double *uFlat, double *bFlat);
 void assignVals(int n, double left[][n], double right[][n], double phi, int i, int j);
 
 
@@ -31,6 +35,52 @@ void flatPrint(int n, double *u);
 // compose u.
 
 void upperhes(int n, double *aFlat, double *uFlat, double *bFlat){
+	int i, j, k;
+	double a[n][n], u[n][n], b[n][n], left[n][n], right[n][n], 
+		uInv[n][n], x = 0.0, y = 0.0, phi = 0.0;
+
+	// expand a 
+	matrixExpand(n, aFlat, a);
+
+	// init b to a
+	matrixCopy(n, a, b);
+
+	// init u and uInv to Inxn
+	identity(n, u);
+	identity(n, uInv);
+
+	// perform ze itrations
+	for(j = 0; j < n; j++){
+		for(i = n-1; i > j+1; i--){
+			// init left and right to I each at start of each iter
+			identity(n, left);
+			identity(n, right);
+
+			// find x and y, then calculate phi
+			x = b[i-1][j];
+			y = b[i][j];
+			phi = atan(-1 * (y / x));
+
+			// kill offenders of b.
+			kill_ze_offenders(n, b, i, j, phi);
+
+			// symmetrically kill "offenders" of u.
+			kill_ze_offenders(n, u, i, j, phi);
+		}
+	}
+
+	// write to outputs
+	matrixFlatten(n, u, uFlat);
+	matrixFlatten(n, b, bFlat);
+
+	return;
+}
+
+void kill_ze_offenders(int n, double b[][n], int i, int j, double phi){
+
+}
+
+void upperhes_slow(int n, double *aFlat, double *uFlat, double *bFlat){
 	int i, j;
 	double a[n][n], u[n][n], b[n][n], left[n][n], right[n][n], 
 		uInv[n][n], x = 0.0, y = 0.0, phi = 0.0;
@@ -231,13 +281,13 @@ int main(){
 	// init a
 	for(i = 0; i < n; i++){
 		for (j = 0; j < n; j++){
-			a[i][j] = rand() % 10;//++sum;
+			a[i][j] = rand() % 100;//++sum;
 		}
 	}
 
 	// flatten input, run upperhes, then expand outputs
 	matrixFlatten(n, a, aFlat);
-	upperhes(n, aFlat, uFlat, bFlat);
+	upperhes_slow(n, aFlat, uFlat, bFlat);
 	matrixExpand(n, uFlat, u);
 	matrixExpand(n, bFlat, b);
 
@@ -259,4 +309,25 @@ int main(){
 	matrixPrint(n, test);
 	printf("original a:\n");
 	matrixPrint(n, a);
+
+	printf("does it work?\n");
+	for(i = 0; i < n; ++i){
+		for(j = 0; j < n; j++){
+			// approximate equals
+			if(fabs(test[i][j] - a[i][j]) > EPS){
+				printf("NO\n");
+				printf("a[%d][%d]: %f, test[%d][%d]: %f\n", i, j, a[i][j], 
+					i, j, test[i][j]);
+				i = INT_MAX;
+				break;
+			}
+		}
+		if (i > n){
+			break;
+		}
+	}
+	if(i < INT_MAX)
+		printf("YES\n");
+
+	return 1;
 }
