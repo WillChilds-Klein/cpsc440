@@ -2,5 +2,6 @@
 *
 
 # Re-include all files with appendage and Makefile
-!*.*
+*.c
+*.pdf
 !Makefile
