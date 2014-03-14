@@ -54,7 +54,7 @@ void upperhes(int n, double *aFlat, double *uFlat, double *bFlat){
 			fast_multiply(n, b, i, j, phi);
 
 			// kill corresponding "offenders" of u.
-			fast_multiply(n, u, i, j, phi);
+			// fast_multiply(n, u, i, j, phi);
 		}
 	}
 
@@ -74,17 +74,22 @@ void fast_multiply(int n, double b[][n], int i, int j, double phi){
 
 	// simulate left multiplication
 	for(k = 0; k < n; k++){
-		temp1[0][k] = cos(phi)*b[i-1][k] + sin(phi)*b[i][k];
-		temp1[1][k] = -1*sin(phi)*b[i-1][k] + cos(phi)*b[i][k];
+		temp1[0][k] = cos(phi)*b[k][i-1] + -1*sin(phi)*b[k][i];
+		temp1[1][k] = sin(phi)*b[k][i-1] + cos(phi)*b[k][i];
 	}
 
-	memcpy(b[i-1], temp1[0], n*sizeof(double));
-	memcpy(b[i], temp1[1], n*sizeof(double));
+	// memcpy(b[i-1], temp1[0], n*sizeof(double));
+	// memcpy(b[i], temp1[1], n*sizeof(double));
+
+	for(k = 0; k < n; k++){
+		b[i-1][k] = temp1[0][k];
+		b[i][k] = temp1[1][k];
+	}
 
 	// simulate right multiplication
 	for(k = 0; k < n; k++){
-		temp2[k][0] = cos(phi)*b[k][i-1] + sin(phi)*b[k][i];
-		temp2[k][1] = -1*sin(phi)*b[k][i-1] + cos(phi)*b[k][i];
+		temp2[k][0] = cos(phi)*b[i-1][k] + -1*sin(phi)*b[i][k];
+		temp2[k][1] = sin(phi)*b[i-1][k] + cos(phi)*b[i][k];
 	}
 
 	for(k = 0; k < n; k++){
@@ -109,33 +114,36 @@ void upperhes_slow(int n, double *aFlat, double *uFlat, double *bFlat){
 	// init b to a
 	matrixCopy(n, a, b);
 
-	// init u and uInv to Inxn
+	// init u, uInv to Inxn
 	identity(n, u);
 	identity(n, uInv);
 
 	// perform iterations
 	for(j = 0; j < n; j++){
 		for(i = n-1; i > j+1; i--){
+			printf("i: %d, j: %d, b:\n", i, j);
+			matrixPrint(n, b);
+
 			// init left and right to I each at start of each iter
 			identity(n, left);
 			identity(n, right);
-
-			// assign rotation values to left matrix
-			left[i-1][i-1] = cos(phi);
-			left[i-1][i] = -1*sin(phi);
-			left[i][i-1] = sin(phi);
-			left[i][i] = cos(phi);
-
-			// assign rotation values to right matrix
-			right[i-1][i-1] = cos(phi);
-			right[i-1][i] = sin(phi);
-			right[i][i-1] = -1*sin(phi);
-			right[i][i] = cos(phi);
-
+			
 			// find x and y, then calculate phi
 			x = b[i-1][j];
 			y = b[i][j];
 			phi = atan(-1 * (y / x));
+
+			// assign rotation values to left matrix
+			left[i-1][i-1] = cos(phi);
+			left[i][i-1] = sin(phi);
+			left[i-1][i] = -1*sin(phi);
+			left[i][i] = cos(phi);
+
+			// assign rotation values to right matrix
+			right[i-1][i-1] = cos(phi);
+			right[i][i-1] = -1*sin(phi);
+			right[i-1][i] = sin(phi);
+			right[i][i] = cos(phi);
 
 			// keel ze y
 			matrixMultiply(n, left, b, b);
@@ -144,6 +152,9 @@ void upperhes_slow(int n, double *aFlat, double *uFlat, double *bFlat){
 			// compose u, uInv
 			matrixMultiply(n, left, u, u);
 			matrixMultiply(n, uInv, right, uInv);
+
+			printf("b:\n");
+			matrixPrint(n, b);
 		}
 	}
 
@@ -295,10 +306,12 @@ int main(){
 	// init a
 	for(i = 0; i < n; i++){
 		for (j = 0; j < n; j++){
-			a[i][j] = rand() % 100;//++sum;
+			// a[i][j] = rand() % 100;
+			a[i][j] = ++sum;
 		}
 	}
 
+	/**/
 	// flatten input, run upperhes_slow, then expand outputs
 	matrixFlatten(n, a, aFlat);
 	upperhes_slow(n, aFlat, uFlat, bFlat);
@@ -308,11 +321,12 @@ int main(){
 	// check outputs.
 	printf("a:\n");
 	matrixPrint(n, a);
-	printf("u:\n");
+	printf("correct u:\n");
 	matrixPrint(n, u);
-	printf("b:\n");
+	printf("correct b:\n");
 	matrixPrint(n, b);
 
+	/** /
 	// flatten input, run upperhes, then expand outputs
 	matrixFlatten(n, a, aFlat);
 	upperhes(n, aFlat, uFlat, bFlat);
@@ -328,7 +342,7 @@ int main(){
 	matrixPrint(n, b);
 
 	// test code
-	/** /
+	/**/
 	printf("test code:\n\n");
 	printf("u uT (should be identity, confirms orthogonality)\n");
 	matrixTranspose(n, u, uInv);
