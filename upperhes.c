@@ -13,7 +13,7 @@ void upperhes_slow(int n, double *aFlat, double *uFlat, double *bFlat);
 
 
 // MATRIX ROUTINES: user must allocate memory for retrun param w
-void matrixCopy(int n, double u[][n], double w[][n]); // w = u
+void matrixCopy(int n, double u[][n], double w[][n]); // w := u
 void matrixTranspose(int n, double u[][n], double w[][n]);		// uT = w
 void matrixMultiply(int n, double u[][n] , double v[][n], double w[][n]); // uv = w
 void identity(int n, double u[][n]); // inits u to n x n identity
@@ -54,7 +54,7 @@ void upperhes(int n, double *aFlat, double *uFlat, double *bFlat){
 			fast_multiply(n, b, i, j, phi);
 
 			// kill corresponding "offenders" of u.
-			// fast_multiply(n, u, i, j, phi);
+			fast_multiply(n, u, i, j, phi);
 		}
 	}
 
@@ -127,7 +127,7 @@ void upperhes_slow(int n, double *aFlat, double *uFlat, double *bFlat){
 			// init left and right to I each at start of each iter
 			identity(n, left);
 			identity(n, right);
-			
+
 			// find x and y, then calculate phi
 			x = b[i-1][j];
 			y = b[i][j];
@@ -193,7 +193,7 @@ void matrixTranspose(int n, double u[][n], double w[][n]){
 
 	return;
 }
-// fixed for memory overlap issue btwn u, v, and w
+// no mem overlap btwn u, v, and w
 void matrixMultiply(int n, double u[][n], double v[][n], double w[][n]){
 	int i, j, k;
 	double vectorSum, temp[n][n];
@@ -326,6 +326,14 @@ int main(){
 	printf("correct b:\n");
 	matrixPrint(n, b);
 
+	matrixCopy(n, b, a);
+	printf("a:\n");
+	matrixPrint(n, a);
+	printf("correct u:\n");
+	matrixPrint(n, u);
+	printf("correct b:\n");
+	matrixPrint(n, b);
+
 	/** /
 	// flatten input, run upperhes, then expand outputs
 	matrixFlatten(n, a, aFlat);
@@ -342,7 +350,7 @@ int main(){
 	matrixPrint(n, b);
 
 	// test code
-	/**/
+	/** /
 	printf("test code:\n\n");
 	printf("u uT (should be identity, confirms orthogonality)\n");
 	matrixTranspose(n, u, uInv);
