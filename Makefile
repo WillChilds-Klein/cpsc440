@@ -5,3 +5,6 @@ all: qr_symmetric
 
 qr_symmetric: qr_symmetric.o
 		${CC} ${CFLAGS} qr_symmetric.c -o qr_symmetric -lm
+
+clean:
+		rm -rf *.o *.dSYM 
