@@ -1,7 +1,7 @@
 CFLAGS = -g3 -std=c99 
 CC = gcc
 
-all: upperhes
+all: qr_symmetric
 
-upperhes: upperhes.o
-		${CC} ${CFLAGS} upperhes.c -o upperhes -lm
+qr_symmetric: qr_symmetric.o
+		${CC} ${CFLAGS} qr_symmetric.c -o qr_symmetric -lm
