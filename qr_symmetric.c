@@ -9,8 +9,8 @@
 
 void qr_symmetric(double *a, int n, double *b);
 void apply_rotations(int n, double b[][n], int i, double w[][n]);
-void shift(int n, double b[][n], double mu, double bShifted[][n]);
-void unshift(int n, double bShifted[][n], double mu, double b[][n]);
+void shift(int n, double b[][n], int i, double mu, double bShifted[][n]);
+void unshift(int n, double bShifted[][n], int i, double mu, double b[][n]);
 int converged(int n, double b[][n], int i);
 
 // UPPERHES ROUTINES: routines used for finding upper hessenberg form
@@ -45,25 +45,26 @@ void qr_symmetric(double *aFlat, int n, double *bFlat){
 	// init nCurr to n
 	nCurr = n;
 
-	// for(i = 0; i < n; i++){
-		j=i=0;
+	for(i = 0; i < n; i++){
+		j=0;
 		printf("i = %d\n", i);
-		while(j < 3){//!converged(n, b, i)){
+		while(j < 7){//!converged(n, b, i)){
+
+			printf("i = %d, j = %d, b:\n", i, j);
+			matrixPrint(n, b);
+
 			// perform shift
 			mu = b[i][i];
-			shift(n, b, mu, bShifted);
+			shift(n, b, i, mu, bShifted);
 
 			// apply rotations
 			apply_rotations(n, bShifted, i, bShifted);
 
 			// add shift back to b
-			unshift(n, bShifted, mu, b);
-
-			printf("b:\n");
-			matrixPrint(n, b);
+			unshift(n, bShifted, i, mu, b);
 			j++;
 		}
-	// }
+	}
 
 	matrixFlatten(n, b, bFlat);
 
@@ -74,6 +75,8 @@ void qr_symmetric(double *aFlat, int n, double *bFlat){
 void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 	int j, k;
 	double b[n][n], temp1[2][n], temp2[n][2], phiArr[n], x, y, phi; // might need array of phi's...
+	double Qj[n][n], QjT[n][n];
+
 	matrixCopy(n, bOriginal, b);
 
 	// make b lower triangular
@@ -84,6 +87,16 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 		phi = atan(x / y);
 		phiArr[j] = phi;
 		
+		// create Qj
+		identity(n, Qj);
+		Qj[j][j] = cos(phi);
+		Qj[j][j+1] = sin(phi);
+		Qj[j+1][j] = -1 * sin(phi);
+		Qj[j+1][j+1] = cos(phi);
+
+		printf("Q%d\n", j);
+		matrixPrint(n, Qj);
+
 		// simulate left multiplication
 		for(k = i; k < n; k++){
 			temp1[0][k] = cos(phi)*b[j][k] - sin(phi)*b[j+1][k];
@@ -97,13 +110,23 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 		}
 	}
 
-	printf("lower triangular?\n");
-	matrixPrint(n, b);
+	// printf("lower triangular?\n");
+	// matrixPrint(n, b);
 
 	// "apply adjoints"
 	for(j = n-2; j >= i; j--){ // j is as used in Step 3 of spec
 		// retrieve appropriate phi
 		phi = phiArr[j];
+
+		// create QjT
+		identity(n, QjT);
+		QjT[j][j] = cos(phi);
+		QjT[j][j+1] = -1 * sin(phi);
+		QjT[j+1][j] = sin(phi);
+		QjT[j+1][j+1] = cos(phi);
+
+		printf("Q%dT\n", j);
+		matrixPrint(n, QjT);
 		
 		// simulate left multiplication
 		for(k = i; k < n; k++){
@@ -118,35 +141,42 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 		}
 	}
 
-	return;
-}
+	// printf("tridiagonal?\n");
+	// matrixPrint(n, b);
 
-void shift(int n, double b[][n], double mu, double bShifted[][n]){
-	int i;
-
-	matrixCopy(n, b, bShifted);
-
-	for(i = 0; i < n; i++){
-		bShifted[i][i] = b[i][i] - mu;
+	for(k = 0; k < n; k++){
+		memcpy(w[i], b[i], n*sizeof(double));
 	}
 
 	return;
 }
 
-void unshift(int n, double bShifted[][n], double mu, double b[][n]){
-	int i;
+void shift(int n, double b[][n], int i, double mu, double bShifted[][n]){
+	int k;
+
+	matrixCopy(n, b, bShifted);
+
+	for(k = i; k < n; k++){
+		bShifted[k][k] = b[k][k] - mu;
+	}
+
+	return;
+}
+
+void unshift(int n, double bShifted[][n], int i, double mu, double b[][n]){
+	int k;
 
 	matrixCopy(n, bShifted, b);
 
-	for(i = 0; i < n; i++){
-		b[i][i] = bShifted[i][i] + mu;
+	for(k = i; k < n; k++){
+		b[k][k] = bShifted[k][k] + mu;
 	}
 
 	return;
 }
 
 int converged(int n, double b[][n], int i){
-	return (b[i][i+1] <= EPS);
+	return (abs(b[i][i+1]) <= EPS);
 }
 
 void upperhes(int n, double *aFlat, double *uFlat, double *bFlat){
@@ -383,12 +413,6 @@ int main(){
 	matrixPrint(n, u);
 	printf("tridiagonal b:\n");
 	matrixPrint(n, b);
-
-	printf("shifted b in 0th iteration\n");
-	shift(n, b, b[0][0], bShifted);
-	matrixPrint(n, bShifted);
-
-	// apply_rotations(n, bShifted, 0, bShifted);
 
 	matrixFlatten(n, b, bFlat);
 	qr_symmetric(bFlat, n, aFlat);
