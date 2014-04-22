@@ -4,8 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <time.h>
 
-#define EPS (.001)
+#define EPS (.00001)
+#define TRUE (1)
+#define FALSE (0)
 
 void qr_symmetric(double *a, int n, double *b);
 void apply_rotations(int n, double b[][n], int i, double w[][n]);
@@ -48,9 +51,11 @@ void qr_symmetric(double *aFlat, int n, double *bFlat){
 	for(i = 0; i < n; i++){
 		j=0;
 		printf("i = %d\n", i);
-		while(j < 7){//!converged(n, b, i)){
+		// while(j < 5){
+		while(!converged(n, b, i)){
 
-			printf("i = %d, j = %d, b:\n", i, j);
+			printf("i = %d, j = %d\n", i, j);
+			printf("b:\n");
 			matrixPrint(n, b);
 
 			// perform shift
@@ -62,6 +67,10 @@ void qr_symmetric(double *aFlat, int n, double *bFlat){
 
 			// add shift back to b
 			unshift(n, bShifted, i, mu, b);
+
+			printf("new b:\n");
+			matrixPrint(n, b);
+
 			j++;
 		}
 	}
@@ -88,14 +97,17 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 		phiArr[j] = phi;
 		
 		// create Qj
-		identity(n, Qj);
-		Qj[j][j] = cos(phi);
-		Qj[j][j+1] = sin(phi);
-		Qj[j+1][j] = -1 * sin(phi);
-		Qj[j+1][j+1] = cos(phi);
+		// identity(n, Qj);
+		// Qj[j][j] = cos(phi);
+		// Qj[j][j+1] = -1 * sin(phi);
+		// Qj[j+1][j] = 1 * sin(phi);
+		// Qj[j+1][j+1] = cos(phi);
 
-		printf("Q%d\n", j);
-		matrixPrint(n, Qj);
+		// printf("Q%d\n", j);
+		// printf("phi = %f\n", phi);
+		// matrixPrint(n, Qj);
+
+		//matrixMultiply(n, Qj, b, b);
 
 		// simulate left multiplication
 		for(k = i; k < n; k++){
@@ -110,25 +122,37 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 		}
 	}
 
-	// printf("lower triangular?\n");
-	// matrixPrint(n, b);
+	printf("lower triangular?\n");
+	matrixPrint(n, b);
+
+	printf("phiArr:\n");
+	flatPrint(n, phiArr);
+	printf("\n");
 
 	// "apply adjoints"
 	for(j = n-2; j >= i; j--){ // j is as used in Step 3 of spec
 		// retrieve appropriate phi
 		phi = phiArr[j];
 
-		// create QjT
-		identity(n, QjT);
-		QjT[j][j] = cos(phi);
-		QjT[j][j+1] = -1 * sin(phi);
-		QjT[j+1][j] = sin(phi);
-		QjT[j+1][j+1] = cos(phi);
+		// experiment
+		// x = b[j][j+1];
+		// y = b[j+1][j+1];
+		// phi = atan(x / y);
 
-		printf("Q%dT\n", j);
-		matrixPrint(n, QjT);
+		// create QjT
+		// identity(n, QjT);
+		// QjT[j][j] = cos(phi);
+		// QjT[j][j+1] = 1 * sin(phi);
+		// QjT[j+1][j] = -1 * sin(phi);
+		// QjT[j+1][j+1] = cos(phi);
+
+		// printf("Q%dT\n", j);
+		// printf("phi = %f\n", phi);
+		// matrixPrint(n, QjT);
+
+		// matrixMultiply(n, b, QjT, b);
 		
-		// simulate left multiplication
+		// simulate right multiplication
 		for(k = i; k < n; k++){
 			temp2[k][0] = cos(phi)*b[k][j] - sin(phi)*b[k][j+1];
 			temp2[k][1] = sin(phi)*b[k][j] + cos(phi)*b[k][j+1];
@@ -141,12 +165,10 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 		}
 	}
 
-	// printf("tridiagonal?\n");
-	// matrixPrint(n, b);
+	printf("tridiagonal?\n");
+	matrixPrint(n, b);
 
-	for(k = 0; k < n; k++){
-		memcpy(w[i], b[i], n*sizeof(double));
-	}
+	matrixCopy(n, b, w);
 
 	return;
 }
@@ -176,7 +198,13 @@ void unshift(int n, double bShifted[][n], int i, double mu, double b[][n]){
 }
 
 int converged(int n, double b[][n], int i){
-	return (abs(b[i][i+1]) <= EPS);
+	if(fabs(b[i][i+1]) <= EPS){
+		printf("converged! b[%d][%d] = %f\n", i, i+1, b[i][i+1]);
+		return TRUE;
+	}
+	else
+		return FALSE;
+	//return (abs(b[i][i+1]) <= EPS);
 }
 
 void upperhes(int n, double *aFlat, double *uFlat, double *bFlat){
@@ -377,10 +405,13 @@ void matrixPrint(int n, double u[][n]){
 void flatPrint(int n, double* u){
 	int i;
 
-	for(i = 0; i < n*n; i++){
-		printf("%f, ", u[i]);
+	printf("[");
+	for(i = 0; i < n; i++){
+		if(i == n-1)
+			printf(" %f]\n", u[i]);
+		else
+			printf(" %f,", u[i]);
 	}
-	printf("\n");
 
 	return;
 }
@@ -394,6 +425,7 @@ int main(){
 	// symmetric matrix should create tridiagonal
 	for (i = 0; i < n; i++){
 		for (j = 0; j < i; j++){
+			// srand(time(NULL));
 			temp = (rand() % 10) + 1;
 			a[i][j] = temp;
 			a[j][i] = temp;
