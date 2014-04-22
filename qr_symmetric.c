@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <time.h>
 
-#define EPS (.00001)
+#define EPS (.00000001)
 #define TRUE (1)
 #define FALSE (0)
 
@@ -37,27 +37,13 @@ void matrixPrint(int n, double u[][n]);
 void flatPrint(int n, double *u);
 
 void qr_symmetric(double *aFlat, int n, double *bFlat){
-	int i, j, nCurr;
-	double a[n][n], b[n][n], uFlat[n*n], bUpperHesFlat[n*n], bShifted[n][n], 
-		spectrum[n], mu, x, y, phi;
+	int i, j;
+	double a[n][n], b[n][n], uFlat[n*n], bShifted[n][n], mu, x, y, phi;
 
-	// make symmetric a tridiagonal/upperhes
-	upperhes(n, aFlat, uFlat, bUpperHesFlat);
-	matrixExpand(n, bUpperHesFlat, b);
-
-	// init nCurr to n
-	nCurr = n;
+	matrixExpand(n, aFlat, b);
 
 	for(i = 0; i < n; i++){
-		j=0;
-		printf("i = %d\n", i);
-		// while(j < 5){
 		while(!converged(n, b, i)){
-
-			printf("i = %d, j = %d\n", i, j);
-			printf("b:\n");
-			matrixPrint(n, b);
-
 			// perform shift
 			mu = b[i][i];
 			shift(n, b, i, mu, bShifted);
@@ -67,11 +53,6 @@ void qr_symmetric(double *aFlat, int n, double *bFlat){
 
 			// add shift back to b
 			unshift(n, bShifted, i, mu, b);
-
-			printf("new b:\n");
-			matrixPrint(n, b);
-
-			j++;
 		}
 	}
 
@@ -88,26 +69,13 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 
 	matrixCopy(n, bOriginal, b);
 
-	// make b lower triangular
+	// make b lower triangular by simulating givens rotational matrices
 	for(j = n-2; j >= i; j--){ // j is as used in Step 3 of spec
 		// find x and y (zero'ing x out), then calculate phi
 		x = b[j][j+1];
 		y = b[j+1][j+1];
 		phi = atan(x / y);
 		phiArr[j] = phi;
-		
-		// create Qj
-		// identity(n, Qj);
-		// Qj[j][j] = cos(phi);
-		// Qj[j][j+1] = -1 * sin(phi);
-		// Qj[j+1][j] = 1 * sin(phi);
-		// Qj[j+1][j+1] = cos(phi);
-
-		// printf("Q%d\n", j);
-		// printf("phi = %f\n", phi);
-		// matrixPrint(n, Qj);
-
-		//matrixMultiply(n, Qj, b, b);
 
 		// simulate left multiplication
 		for(k = i; k < n; k++){
@@ -122,35 +90,10 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 		}
 	}
 
-	printf("lower triangular?\n");
-	matrixPrint(n, b);
-
-	printf("phiArr:\n");
-	flatPrint(n, phiArr);
-	printf("\n");
-
-	// "apply adjoints"
+	// apply adjoints
 	for(j = n-2; j >= i; j--){ // j is as used in Step 3 of spec
 		// retrieve appropriate phi
 		phi = phiArr[j];
-
-		// experiment
-		// x = b[j][j+1];
-		// y = b[j+1][j+1];
-		// phi = atan(x / y);
-
-		// create QjT
-		// identity(n, QjT);
-		// QjT[j][j] = cos(phi);
-		// QjT[j][j+1] = 1 * sin(phi);
-		// QjT[j+1][j] = -1 * sin(phi);
-		// QjT[j+1][j+1] = cos(phi);
-
-		// printf("Q%dT\n", j);
-		// printf("phi = %f\n", phi);
-		// matrixPrint(n, QjT);
-
-		// matrixMultiply(n, b, QjT, b);
 		
 		// simulate right multiplication
 		for(k = i; k < n; k++){
@@ -164,9 +107,6 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 			b[k][j+1] = temp2[k][1];
 		}
 	}
-
-	printf("tridiagonal?\n");
-	matrixPrint(n, b);
 
 	matrixCopy(n, b, w);
 
@@ -198,13 +138,10 @@ void unshift(int n, double bShifted[][n], int i, double mu, double b[][n]){
 }
 
 int converged(int n, double b[][n], int i){
-	if(fabs(b[i][i+1]) <= EPS){
-		printf("converged! b[%d][%d] = %f\n", i, i+1, b[i][i+1]);
+	if(fabs(b[i][i+1]) <= EPS)
 		return TRUE;
-	}
 	else
 		return FALSE;
-	//return (abs(b[i][i+1]) <= EPS);
 }
 
 void upperhes(int n, double *aFlat, double *uFlat, double *bFlat){
@@ -416,43 +353,52 @@ void flatPrint(int n, double* u){
 	return;
 }
 
-int main(){
-	int i, j, sum = 0, n = 4;
-	double a[n][n], u[n][n], b[n][n],
-		aFlat[n*n], uFlat[n*n], bFlat[n*n],
-		uInv[n][n], bShifted[n][n], temp;
+// int main(){
+// 	int i, j, n = 3;
+// 	double a[n][n], u[n][n], b[n][n],
+// 		aFlat[n*n], uFlat[n*n], bFlat[n*n],
+// 		uInv[n][n], bShifted[n][n], temp;
 
-	// symmetric matrix should create tridiagonal
-	for (i = 0; i < n; i++){
-		for (j = 0; j < i; j++){
-			// srand(time(NULL));
-			temp = (rand() % 10) + 1;
-			a[i][j] = temp;
-			a[j][i] = temp;
-		}
-		a[i][i] = i+1;
-	}
+// 	// create symmetric matrix
+// 	for (i = 0; i < n; i++){
+// 		for (j = 0; j < i; j++){
+// 			// srand(time(NULL));
+// 			temp = (rand() % 10) + 1;
+// 			a[i][j] = temp;
+// 			a[j][i] = temp;
+// 		}
+// 		a[i][i] = i+1;
+// 	}
 
-	matrixFlatten(n, a, aFlat);
-	upperhes(n, aFlat, uFlat, bFlat);
-	matrixExpand(n, uFlat, u);
-	matrixExpand(n, bFlat, b);
+// 	matrixFlatten(n, a, aFlat);
+// 	upperhes(n, aFlat, uFlat, bFlat);
+// 	matrixExpand(n, bFlat, b);
 
-	// check outputs.
-	printf("symmetric a:\n");
-	matrixPrint(n, a);
-	printf("u:\n");
-	matrixPrint(n, u);
-	printf("tridiagonal b:\n");
-	matrixPrint(n, b);
+// 	printf("tridiagonal a:\n");
+// 	matrixPrint(n, b);
 
-	matrixFlatten(n, b, bFlat);
-	qr_symmetric(bFlat, n, aFlat);
-	matrixExpand(n, aFlat, a);
+// 	matrixFlatten(n, b, bFlat);
+// 	qr_symmetric(bFlat, n, aFlat);
+// 	matrixExpand(n, aFlat, a);
 
-	printf("new a is tridiagonal b above.\n");
-	printf("spectrum of a:\n");
-	matrixPrint(n, a);
+// 	printf("spectrum of a:\n");
+// 	matrixPrint(n, a);
 
-	return 1;
-}
+	
+// 	double a9[9] = {1, 2, 3, 2, 1, 4, 3, 4, 1};
+	
+// 	upperhes(n, a9, uFlat, bFlat);
+// 	matrixExpand(n, bFlat, b);
+
+// 	printf("tridiagonal a:\n");
+// 	matrixPrint(n, b);
+
+// 	matrixFlatten(n, b, bFlat);
+// 	qr_symmetric(bFlat, n, aFlat);
+// 	matrixExpand(n, aFlat, a);
+
+// 	printf("spectrum of a:\n");
+// 	matrixPrint(n, a);
+
+// 	return 1;
+// }
