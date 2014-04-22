@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <time.h>
 
-#define EPS (.00000001)
+#define EPS (.000000000000001)
 #define TRUE (1)
 #define FALSE (0)
 
@@ -73,7 +73,7 @@ void apply_rotations(int n, double bOriginal[][n], int i, double w[][n]){
 	for(j = n-2; j >= i; j--){ // j is as used in Step 3 of spec
 		// find x and y (zero'ing x out), then calculate phi
 		x = b[j][j+1];
-		y = b[j+1][j+1];
+		y = b[j+1][j+1] + EPS; // increment by small EPS to avoid div by 0
 		phi = atan(x / y);
 		phiArr[j] = phi;
 
@@ -385,20 +385,20 @@ void flatPrint(int n, double* u){
 // 	matrixPrint(n, a);
 
 	
-// 	double a9[9] = {1, 2, 3, 2, 1, 4, 3, 4, 1};
+// 	// double a9[9] = {1, 2, 3, 2, 1, 4, 3, 4, 1};
 	
-// 	upperhes(n, a9, uFlat, bFlat);
-// 	matrixExpand(n, bFlat, b);
+// 	// upperhes(n, a9, uFlat, bFlat);
+// 	// matrixExpand(n, bFlat, b);
 
-// 	printf("tridiagonal a:\n");
-// 	matrixPrint(n, b);
+// 	// printf("tridiagonal a:\n");
+// 	// matrixPrint(n, b);
 
-// 	matrixFlatten(n, b, bFlat);
-// 	qr_symmetric(bFlat, n, aFlat);
-// 	matrixExpand(n, aFlat, a);
+// 	// matrixFlatten(n, b, bFlat);
+// 	// qr_symmetric(bFlat, n, aFlat);
+// 	// matrixExpand(n, aFlat, a);
 
-// 	printf("spectrum of a:\n");
-// 	matrixPrint(n, a);
+// 	// printf("spectrum of a:\n");
+// 	// matrixPrint(n, a);
 
 // 	return 1;
 // }
