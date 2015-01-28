@@ -373,52 +373,53 @@ void flatPrint(int n, double* u){
 	return;
 }
 
-// int main(){
-// 	int i, j, n = 3;
-// 	double a[n][n], u[n][n], b[n][n],
-// 		aFlat[n*n], uFlat[n*n], bFlat[n*n],
-// 		uInv[n][n], bShifted[n][n], temp;
+/**/
+int main(){
+	int i, j, n = 3;
+	double a[n][n], u[n][n], b[n][n],
+		aFlat[n*n], uFlat[n*n], bFlat[n*n],
+		uInv[n][n], bShifted[n][n], temp;
 
-// 	// create symmetric matrix
-// 	for (i = 0; i < n; i++){
-// 		for (j = 0; j < i; j++){
-// 			// srand(time(NULL));
-// 			temp = (rand() % 10) + 1;
-// 			a[i][j] = temp;
-// 			a[j][i] = temp;
-// 		}
-// 		a[i][i] = i+1;
-// 	}
+	// create symmetric matrix
+	for (i = 0; i < n; i++){
+		for (j = 0; j < i; j++){
+			// srand(time(NULL));
+			temp = (rand() % 10) + 1;
+			a[i][j] = temp;
+			a[j][i] = temp;
+		}
+		a[i][i] = i+1;
+	}
 
-// 	matrixFlatten(n, a, aFlat);
-// 	upperhes(n, aFlat, uFlat, bFlat);
-// 	matrixExpand(n, bFlat, b);
+	matrixFlatten(n, a, aFlat);
+	upperhes(n, aFlat, uFlat, bFlat);
+	matrixExpand(n, bFlat, b);
 
-// 	printf("tridiagonal a:\n");
-// 	matrixPrint(n, b);
+	printf("tridiagonal a:\n");
+	matrixPrint(n, b);
 
-// 	matrixFlatten(n, b, bFlat);
-// 	qr_symmetric(bFlat, n, aFlat);
-// 	matrixExpand(n, aFlat, a);
+	matrixFlatten(n, b, bFlat);
+	qr_symmetric(bFlat, n, aFlat);
+	matrixExpand(n, aFlat, a);
 
-// 	printf("spectrum of a:\n");
-// 	matrixPrint(n, a);
+	printf("spectrum of a:\n");
+	matrixPrint(n, a);
 
 	
-// 	// double a9[9] = {1, 2, 3, 2, 1, 4, 3, 4, 1};
+	double a9[9] = {1, 2, 3, 2, 1, 4, 3, 4, 1};
 	
-// 	// upperhes(n, a9, uFlat, bFlat);
-// 	// matrixExpand(n, bFlat, b);
+	upperhes(n, a9, uFlat, bFlat);
+	matrixExpand(n, bFlat, b);
 
-// 	// printf("tridiagonal a:\n");
-// 	// matrixPrint(n, b);
+	printf("tridiagonal a:\n");
+	matrixPrint(n, b);
 
-// 	// matrixFlatten(n, b, bFlat);
-// 	// qr_symmetric(bFlat, n, aFlat);
-// 	// matrixExpand(n, aFlat, a);
+	matrixFlatten(n, b, bFlat);
+	qr_symmetric(bFlat, n, aFlat);
+	matrixExpand(n, aFlat, a);
 
-// 	// printf("spectrum of a:\n");
-// 	// matrixPrint(n, a);
+	printf("spectrum of a:\n");
+	matrixPrint(n, a);
 
-// 	return 1;
-// }
+	return 1;
+}

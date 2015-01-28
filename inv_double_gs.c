@@ -11,7 +11,7 @@ void inv_double_gs(double* a, int n, double* u, double* b);
 void vectorSubtract(int n, double* u, double* v, double* w); 	// u - v = w
 void vectorScale(int n, double* u, double c, double* w);		// cu = w
 void dotProduct(int n, double* u, double* v, double* w);		// u * v = w
-void vectorProject(int n, double* u, double* v, double* x, double* w);// ((u*v) / ||v||^2)x = w
+void vectorProject(int n, double* u, double* v, double* x, double* w); // ((u*v) / ||v||^2)x = w
 void vectorNormalize(int n, double* u, double* v, double* w);	// u / ||v|| = w
 void vectorMagnitude(int n, double* u, double* w);				// |u| = w
 
@@ -300,7 +300,14 @@ int main(){
 		}
 	}
 
+	double a_invertable[3][3] = {
+		{3, 0, 2},
+		{2, 0, -2},
+		{0, 1, 1}
+	};
+
 	// Test subroutines.
+	printf("TESTING MATRIX SUBROUTINES:\n");
 	printf("u:\n");
 	vectorPrint(n, a[1]);	
 	printf("v:\n");
@@ -330,16 +337,20 @@ int main(){
 	vectorPrint(n, a[1]);	
 	printf("v:\n");
 	vectorPrint(n, a[0]);
-	printf("comp(u,v:)\n");
-	vectorProject(n, a[1], a[0], x, w);
-	vectorPrint(n, x);
+	printf("x:\n");
+	vectorPrint(n, a[2]);
+	printf("((u*v) / ||v||^2)x : \n");
+	vectorProject(n, a[1], a[0], a[2], w);
+	vectorPrint(n, w);
 	printf("\n\n");
 
 	printf("u:\n");
 	vectorPrint(n, a[1]);
-	printf("||u||:\n");
-	vectorNormalize(n, a[1], x, w);
-	vectorPrint(n, x);
+	printf("v:\n");
+	vectorPrint(n, a[0]);
+	printf("u / ||v|| :\n");
+	vectorNormalize(n, a[1], a[0], w);
+	vectorPrint(n, w);
 	printf("\n\n");
 
 	printf("u:\n");
@@ -363,7 +374,13 @@ int main(){
 	matrixPrint(n, b);
 	printf("\n\n");
 
-	matrixFlatten(n, a, flatA);
+
+	// test inv_double_gs
+	printf("TESTING inv_double_gs:\n");
+	printf("original A:\n");
+	matrixPrint(n, a_invertable);
+
+	matrixFlatten(n, a_invertable, flatA);
 	inv_double_gs(flatA, n, flatU, flatB);
 
 	// check results
@@ -371,7 +388,7 @@ int main(){
 	matrixExpand(n, flatB, b);
 	printf("finished U:\n");
 	matrixPrint(n, u);
-	printf("finished B:\n");
+	printf("finished B (A's inverse):\n");
 	matrixPrint(n, b);
 }
 /**/

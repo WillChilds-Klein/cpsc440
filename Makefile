@@ -1,4 +1,4 @@
-CFLAGS = -g3 -std=c99 
+CFLAGS = -g3 -std=c99 -w
 CC = gcc
 
 all: inv_double_gs upperhes qr_symmetric
@@ -13,4 +13,4 @@ qr_symmetric: qr_symmetric.o
 	${CC} ${CFLAGS} qr_symmetric.c -o qr_symmetric -lm
 
 clean:
-	rm -rf *.o *.dSYM 
+	rm -rf *.o *.dSYM inv_double_gs upperhes qr_symmetric

@@ -5,3 +5,4 @@
 !*.c
 !*.pdf
 !Makefile
+!.sh

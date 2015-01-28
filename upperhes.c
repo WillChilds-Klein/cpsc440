@@ -6,6 +6,8 @@
 #include <limits.h>
 
 #define EPS (.0000001)
+#define TRUE (1)
+#define FALSE (0)
 
 void upperhes(int n, double *a, double *u, double *b);
 void fast_left_multiply(int n, double b[][n], int i, double phi, double w[][n]);
@@ -301,106 +303,112 @@ void flatPrint(int n, double* u){
 
 	return;
 }
+/**/
+int main(){
+	int i, j, sum = 0, n = 4, valid = TRUE;
+	double a[n][n], u[n][n], b[n][n],
+		aFlat[n*n], uFlat[n*n], bFlat[n*n],
+		uInv[n][n], test[n][n], temp;
 
-// int main(){
-// 	int i, j, sum = 0, n = 4;
-// 	double a[n][n], u[n][n], b[n][n],
-// 		aFlat[n*n], uFlat[n*n], bFlat[n*n],
-// 		uInv[n][n], test[n][n], temp;
+	// init a
+	for(i = 0; i < n; i++){
+		for (j = 0; j < n; j++){
+			a[i][j] = rand() % 100; // rand on interval [1,100]
+			// a[i][j] = ++sum; // [1,2,...,n^2]
+		}
+	}
 
-// 	// init a
-// 	for(i = 0; i < n; i++){
-// 		for (j = 0; j < n; j++){
-// 			a[i][j] = rand() % 100; // rand on interval [1,100]
-// 			// a[i][j] = ++sum; // [1,2,...,n^2]
-// 		}
-// 	}
+	/**/
+	// flatten input, run upperhes_slow, then expand outputs
+	matrixFlatten(n, a, aFlat);
+	upperhes_slow(n, aFlat, uFlat, bFlat);
+	matrixExpand(n, uFlat, u);
+	matrixExpand(n, bFlat, b);
 
-// 	/**/
-// 	// flatten input, run upperhes_slow, then expand outputs
-// 	matrixFlatten(n, a, aFlat);
-// 	upperhes_slow(n, aFlat, uFlat, bFlat);
-// 	matrixExpand(n, uFlat, u);
-// 	matrixExpand(n, bFlat, b);
+	// check outputs.
+	printf("a:\n");
+	matrixPrint(n, a);
+	printf("slow (correct) u:\n");
+	matrixPrint(n, u);
+	printf("slow (correct) b:\n");
+	matrixPrint(n, b);
 
-// 	// check outputs.
-// 	printf("a:\n");
-// 	matrixPrint(n, a);
-// 	printf("slow (correct) u:\n");
-// 	matrixPrint(n, u);
-// 	printf("slow (correct) b:\n");
-// 	matrixPrint(n, b);
+	/**/
+	// flatten input, run upperhes, then expand outputs
+	matrixFlatten(n, a, aFlat);
+	upperhes(n, aFlat, uFlat, bFlat);
+	matrixExpand(n, uFlat, u);
+	matrixExpand(n, bFlat, b);
 
-// 	/**/
-// 	// flatten input, run upperhes, then expand outputs
-// 	matrixFlatten(n, a, aFlat);
-// 	upperhes(n, aFlat, uFlat, bFlat);
-// 	matrixExpand(n, uFlat, u);
-// 	matrixExpand(n, bFlat, b);
+	// check outputs.
+	printf("a:\n");
+	matrixPrint(n, a);
+	printf("fast u:\n");
+	matrixPrint(n, u);
+	printf("fast b:\n");
+	matrixPrint(n, b);
 
-// 	// check outputs.
-// 	printf("a:\n");
-// 	matrixPrint(n, a);
-// 	printf("fast u:\n");
-// 	matrixPrint(n, u);
-// 	printf("fast b:\n");
-// 	matrixPrint(n, b);
+	// test code
+	/**/
+	printf("test code:\n\n");
+	printf("u uT (should be identity, confirms orthogonality)\n");
+	matrixTranspose(n, u, uInv);
+	matrixMultiply(n, u, uInv, test);
+	matrixPrint(n, test);
+	printf("uT b u (should be original a)\n");
+	matrixMultiply(n, uInv, b, test);
+	matrixMultiply(n, test, u, test);
+	matrixPrint(n, test);
+	printf("original a:\n");
+	matrixPrint(n, a);
+	printf("does it work?\n");
+	for(i = 0; i < n; ++i){
+		for(j = 0; j < n; j++){
+			// approximate equals
+			if(fabs(test[i][j] - a[i][j]) > EPS){
+				valid = FALSE;
+				break;
+			}
+		}
+		if (valid == FALSE){
+			break;
+		}
+	}
+	if(valid == TRUE) // check valid
+	{
+		printf("YES\n\n");
+	}
+	else
+	{
+		printf("NO\n");
+		printf("a[%d][%d]: %f =/= test[%d][%d]: %f\n\n", i, j, a[i][j], 
+			i, j, test[i][j]);
+	}
+	/**/
 
-// 	// test code
-// 	/**/
-// 	printf("test code:\n\n");
-// 	printf("u uT (should be identity, confirms orthogonality)\n");
-// 	matrixTranspose(n, u, uInv);
-// 	matrixMultiply(n, u, uInv, test);
-// 	matrixPrint(n, test);
-// 	printf("uT b u (should be original a)\n");
-// 	matrixMultiply(n, uInv, b, test);
-// 	matrixMultiply(n, test, u, test);
-// 	matrixPrint(n, test);
-// 	printf("original a:\n");
-// 	matrixPrint(n, a);
-// 	printf("does it work?\n");
-// 	for(i = 0; i < n; ++i){
-// 		for(j = 0; j < n; j++){
-// 			// approximate equals
-// 			if(fabs(test[i][j] - a[i][j]) > EPS){
-// 				printf("NO\n");
-// 				printf("a[%d][%d]: %f =/= test[%d][%d]: %f\n\n", i, j, a[i][j], 
-// 					i, j, test[i][j]);
-// 				i = INT_MAX; // use i as inequality flag
-// 				break;
-// 			}
-// 		}
-// 		if (i > n){
-// 			break;
-// 		}
-// 	}
-// 	if(i < INT_MAX) // test flag.
-// 		printf("YES\n\n");
-// 	/**/
+	// symmetric matrix should create tridiagonal
+	for (i = 0; i < n; i++){
+		for (j = 0; j < i; j++){
+			temp = (rand() % 10) + 1;
+			a[i][j] = temp;
+			a[j][i] = temp;
+		}
+		a[i][i] = i+1;
+	}
 
-// 	// symmetric matrix should create tridiagonal
-// 	for (i = 0; i < n; i++){
-// 		for (j = 0; j < i; j++){
-// 			temp = (rand() % 10) + 1;
-// 			a[i][j] = temp;
-// 			a[j][i] = temp;
-// 		}
-// 		a[i][i] = i+1;
-// 	}
+	matrixFlatten(n, a, aFlat);
+	upperhes(n, aFlat, uFlat, bFlat);
+	matrixExpand(n, uFlat, u);
+	matrixExpand(n, bFlat, b);
 
-// 	matrixFlatten(n, a, aFlat);
-// 	upperhes(n, aFlat, uFlat, bFlat);
-// 	matrixExpand(n, uFlat, u);
-// 	matrixExpand(n, bFlat, b);
+	// check outputs.
+	printf("symmetric a:\n");
+	matrixPrint(n, a);
+	printf("u:\n");
+	matrixPrint(n, u);
+	printf("tridiagonal b:\n");
+	matrixPrint(n, b);
 
-// 	// check outputs.
-// 	printf("symmetric a:\n");
-// 	matrixPrint(n, a);
-// 	printf("u:\n");
-// 	matrixPrint(n, u);
-// 	printf("tridiagonal b:\n");
-// 	matrixPrint(n, b);
-
-// 	return 1;
-// }
+	return 1;
+}
+/**/
