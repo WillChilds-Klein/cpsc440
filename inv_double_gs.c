@@ -287,10 +287,10 @@ void flatPrint(int n, double* u){
 	return;
 }
 
-/** /
+/**/
 int main(){
 	int i, j, n = 3;
-	double a[n][n], u[n][n], b[n][n], x[n], y[1], 
+	double a[n][n], u[n][n], b[n][n], x[n], w[n], y[1], 
 		flatA[n*n], flatU[n*n], flatB[n*n], sum = 1.0;
 
 	// init a
@@ -307,15 +307,6 @@ int main(){
 	vectorPrint(n, a[0]);
 	printf("u - v:\n");
 	vectorSubtract(n, a[1], a[0], x);
-	vectorPrint(n, x);
-	printf("\n\n");
-
-	printf("u:\n");
-	vectorPrint(n, a[1]);	
-	printf("v:\n");
-	vectorPrint(n, a[2]);
-	printf("u + v:\n");
-	vectorAdd(n, a[1], a[2], x);
 	vectorPrint(n, x);
 	printf("\n\n");
 
@@ -340,14 +331,14 @@ int main(){
 	printf("v:\n");
 	vectorPrint(n, a[0]);
 	printf("comp(u,v:)\n");
-	vectorProject(n, a[1], a[0], x);
+	vectorProject(n, a[1], a[0], x, w);
 	vectorPrint(n, x);
 	printf("\n\n");
 
 	printf("u:\n");
 	vectorPrint(n, a[1]);
 	printf("||u||:\n");
-	vectorNormalize(n, a[1], x);
+	vectorNormalize(n, a[1], x, w);
 	vectorPrint(n, x);
 	printf("\n\n");
 
