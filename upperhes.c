@@ -215,9 +215,13 @@ void identity(int n, double u[][n]){
 	for(i = 0; i < n; i++){
 		for(j = 0; j < n; j++){
 			if(i == j)
+			{
 				u[i][j] = 1.0;
+			}
 			else
+			{
 				u[i][j] = 0.0;
+			}
 		}
 	}
 
@@ -253,9 +257,13 @@ void vectorPrint(int n, double* u){
 	printf("[");
 	for(i = 0; i < n; i++){
 		if(i == n-1)
+		{
 			printf(" %f", u[i]);
+		}
 		else
+		{
 			printf(" %f,", u[i]);
+		}
 	}
 	printf("]\n");
 
@@ -269,9 +277,13 @@ void matrixPrint(int n, double u[][n]){
 		printf("[");
 		for(j = 0; j < n; j++){
 			if(j == n-1)
+			{
 				printf(" %f]\n", u[i][j]);
+			}
 			else
+			{
 				printf(" %f,", u[i][j]);
+			}
 		}
 	}
 	printf("\n");
